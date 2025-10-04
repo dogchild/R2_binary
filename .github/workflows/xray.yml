@@ -1,6 +1,6 @@
 name: Deploy Xray Binaries to R2
 
-# 手动触发
+# 允许手动从 GitHub Actions 页面触发
 on:
   workflow_dispatch:
 
@@ -8,14 +8,18 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
+      # 步骤 1: 检出你的仓库代码
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 步骤 2: 安装依赖工具 (UPX 用于压缩, Unzip 用于解压)
       - name: Install Tools (UPX, Unzip)
         run: |
           sudo apt-get update
           sudo apt-get install -y upx-ucl unzip
 
+      # 步骤 3: 设置 rclone (这是修正的关键部分)
+      # 使用官方的 rclone/setup-rclone action 来安装和配置 rclone
       - name: Setup rclone
         uses: rclone/setup-rclone@v1
         with:
@@ -27,6 +31,7 @@ jobs:
             secret_access_key = ${{ secrets.R2_SECRET_ACCESS_KEY }}
             endpoint = https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
 
+      # 步骤 4: 处理 AMD64 架构的 Xray
       - name: Download, Compress, and Upload AMD64
         run: |
           echo "Processing AMD64 version..."
@@ -36,6 +41,7 @@ jobs:
           echo "Uploading to gfw bucket..."
           rclone copyto xray-amd64-compressed myR2:gfw/xray --progress
 
+      # 步骤 5: 处理 ARM64 架构的 Xray
       - name: Download, Compress, and Upload ARM64
         run: |
           echo "Processing ARM64 version..."
@@ -45,6 +51,7 @@ jobs:
           echo "Uploading to gfw-arm bucket..."
           rclone copyto xray-arm64-compressed myR2:gfw-arm/xray --progress
           
+      # 步骤 6: 刷新 Cloudflare 缓存
       - name: Purge Cloudflare Cache
         run: |
           echo "Purging Cloudflare cache..."
@@ -57,3 +64,4 @@ jobs:
                    "https://arm.dogchild.eu.org/xray"
                  ]
                }'
+
