@@ -17,7 +17,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y upx-ucl unzip
 
-      # 步骤 3: 手动安装并配置 rclone (全新方法)
+      # 步骤 3: 手动安装并配置 rclone
       - name: Install and Configure rclone
         run: |
           # 从官方渠道下载并执行安装脚本
@@ -40,17 +40,23 @@ jobs:
       # 步骤 4: 处理 AMD64 架构的 Xray
       - name: Download, Compress, and Upload AMD64
         run: |
-          # ... (下载和压缩命令不变)
+          echo "Processing AMD64 version..."
+          curl -L -o xray-linux-64.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
+          unzip xray-linux-64.zip xray
+          upx --best --lzma -o xray-amd64-compressed xray
           echo "Uploading to gfw bucket..."
           rclone copyto --s3-no-check-bucket xray-amd64-compressed myR2:gfw/xray --progress
 
       # 步骤 5: 处理 ARM64 架构的 Xray
       - name: Download, Compress, and Upload ARM64
         run: |
-          # ... (下载和压缩命令不变)
+          echo "Processing ARM64 version..."
+          curl -L -o xray-linux-arm64.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-arm64-v8a.zip
+          unzip xray-linux-arm64.zip xray
+          upx --best --lzma -o xray-arm64-compressed xray
           echo "Uploading to gfw-arm bucket..."
           rclone copyto --s3-no-check-bucket xray-arm64-compressed myR2:gfw-arm/xray --progress
-      
+          
       # 步骤 6: 刷新 Cloudflare 缓存
       - name: Purge Cloudflare Cache
         run: |
@@ -64,4 +70,3 @@ jobs:
                    "https://arm.dogchild.eu.org/xray"
                  ]
                }'
-
