@@ -20,15 +20,12 @@ jobs:
       # 步骤 3: 手动安装并配置 rclone
       - name: Install and Configure rclone
         run: |
-          # 从官方渠道下载并执行安装脚本
           echo "Installing rclone..."
           curl https://rclone.org/install.sh | sudo bash
           
-          # 创建 rclone 的配置文件夹
           echo "Creating rclone config directory..."
           mkdir -p ~/.config/rclone
           
-          # 将您的 R2 凭据写入 rclone 配置文件
           echo "Writing rclone config file..."
           echo "[myR2]
           type = s3
@@ -42,7 +39,7 @@ jobs:
         run: |
           echo "Processing AMD64 version..."
           curl -L -o xray-linux-64.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-          unzip xray-linux-64.zip xray
+          unzip -o xray-linux-64.zip xray  # <-- 为稳妥起见，这里也加上 -o
           upx --best --lzma -o xray-amd64-compressed xray
           echo "Uploading to gfw bucket..."
           rclone copyto --s3-no-check-bucket xray-amd64-compressed myR2:gfw/xray --progress
@@ -52,7 +49,7 @@ jobs:
         run: |
           echo "Processing ARM64 version..."
           curl -L -o xray-linux-arm64.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-arm64-v8a.zip
-          unzip xray-linux-arm64.zip xray
+          unzip -o xray-linux-arm64.zip xray  # <-- 关键修正：添加 -o 参数强制覆盖
           upx --best --lzma -o xray-arm64-compressed xray
           echo "Uploading to gfw-arm bucket..."
           rclone copyto --s3-no-check-bucket xray-arm64-compressed myR2:gfw-arm/xray --progress
