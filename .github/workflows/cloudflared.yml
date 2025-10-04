@@ -7,28 +7,19 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      # 步骤 1: 检出仓库代码
+      # 步骤 1: 检出仓库代码 (虽然没直接用, 但保留是个好习惯)
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 步骤 2: 安装依赖工具
-      - name: Install Tools (UPX)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y upx-ucl
-
-      # 步骤 3: 手动安装并配置 rclone
+      # 步骤 2: 安装并配置 rclone
       - name: Install and Configure rclone
         run: |
-          # 从官方渠道下载并执行安装脚本
           echo "Installing rclone..."
           curl https://rclone.org/install.sh | sudo bash
           
-          # 创建 rclone 的配置文件夹
           echo "Creating rclone config directory..."
           mkdir -p ~/.config/rclone
           
-          # 将您的 R2 凭据写入 rclone 配置文件
           echo "Writing rclone config file..."
           echo "[myR2]
           type = s3
@@ -37,31 +28,23 @@ jobs:
           secret_access_key = ${{ secrets.R2_SECRET_ACCESS_KEY }}
           endpoint = https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com" > ~/.config/rclone/rclone.conf
 
-      # 步骤 4: 处理 AMD64 架构的 Cloudflared
-      - name: Download, Compress, and Upload AMD64
+      # 步骤 3: 从 URL 直接上传 AMD64 架构的 Cloudflared
+      - name: Upload AMD64 from URL
         run: |
-          echo "Processing AMD64 version..."
-          curl -L -o cloudflared-linux-amd64 https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
-          chmod +x cloudflared-linux-amd64
-          upx --best --lzma -o cloudflared-amd64-compressed cloudflared-linux-amd64
-          echo "Uploading to gfw bucket..."
-          rclone copyto --s3-no-check-bucket cloudflared-amd64-compressed myR2:gfw/cloudflared --progress
+          echo "Uploading AMD64 version directly from URL..."
+          rclone copyurl https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 myR2:gfw/cloudflared --progress
 
-      # 步骤 5: 处理 ARM64 架构的 Cloudflared
-      - name: Download, Compress, and Upload ARM64
+      # 步骤 4: 从 URL 直接上传 ARM64 架构的 Cloudflared
+      - name: Upload ARM64 from URL
         run: |
-          echo "Processing ARM64 version..."
-          curl -L -o cloudflared-linux-arm64 https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64
-          chmod +x cloudflared-linux-arm64
-          upx --best --lzma -o cloudflared-arm64-compressed cloudflared-linux-arm64
-          echo "Uploading to gfw-arm bucket..."
-          rclone copyto --s3-no-check-bucket cloudflared-arm64-compressed myR2:gfw-arm/cloudflared --progress
+          echo "Uploading ARM64 version directly from URL..."
+          rclone copyurl https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64 myR2:gfw-arm/cloudflared --progress
 
-      # 步骤 6: 刷新 Cloudflare 缓存
+      # 步骤 5: 刷新 Cloudflare 缓存
       - name: Purge Cloudflare Cache
         run: |
           echo "Purging Cloudflare cache..."
-          curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
+          curl -X POST "https://api/cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
                -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
                -H "Content-Type: application/json" \
                --data '{
