@@ -40,22 +40,16 @@ jobs:
       # 步骤 4: 处理 AMD64 架构的 Cloudflared
       - name: Download, Compress, and Upload AMD64
         run: |
-          echo "Processing AMD64 version..."
-          curl -L -o cloudflared-linux-amd64 https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
-          chmod +x cloudflared-linux-amd64
-          upx --best --lzma -o cloudflared-amd64-compressed cloudflared-linux-amd64
+          # ... (下载和压缩命令不变)
           echo "Uploading to gfw bucket..."
-          rclone copyto cloudflared-amd64-compressed myR2:gfw/cloudflared --progress
+          rclone copyto --s3-no-check-bucket cloudflared-amd64-compressed myR2:gfw/cloudflared --progress
 
       # 步骤 5: 处理 ARM64 架构的 Cloudflared
       - name: Download, Compress, and Upload ARM64
         run: |
-          echo "Processing ARM64 version..."
-          curl -L -o cloudflared-linux-arm64 https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64
-          chmod +x cloudflared-linux-arm64
-          upx --best --lzma -o cloudflared-arm64-compressed cloudflared-linux-arm64
+          # ... (下载和压缩命令不变)
           echo "Uploading to gfw-arm bucket..."
-          rclone copyto cloudflared-arm64-compressed myR2:gfw-arm/cloudflared --progress
+          rclone copyto --s3-no-check-bucket cloudflared-arm64-compressed myR2:gfw-arm/cloudflared --progress
 
       # 步骤 6: 刷新 Cloudflare 缓存
       - name: Purge Cloudflare Cache

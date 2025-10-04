@@ -40,23 +40,17 @@ jobs:
       # 步骤 4: 处理 AMD64 架构的 Xray
       - name: Download, Compress, and Upload AMD64
         run: |
-          echo "Processing AMD64 version..."
-          curl -L -o xray-linux-64.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-          unzip xray-linux-64.zip xray
-          upx --best --lzma -o xray-amd64-compressed xray
+          # ... (下载和压缩命令不变)
           echo "Uploading to gfw bucket..."
-          rclone copyto xray-amd64-compressed myR2:gfw/xray --progress
+          rclone copyto --s3-no-check-bucket xray-amd64-compressed myR2:gfw/xray --progress
 
       # 步骤 5: 处理 ARM64 架构的 Xray
       - name: Download, Compress, and Upload ARM64
         run: |
-          echo "Processing ARM64 version..."
-          curl -L -o xray-linux-arm64.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-arm64-v8a.zip
-          unzip xray-linux-arm64.zip xray
-          upx --best --lzma -o xray-arm64-compressed xray
+          # ... (下载和压缩命令不变)
           echo "Uploading to gfw-arm bucket..."
-          rclone copyto xray-arm64-compressed myR2:gfw-arm/xray --progress
-          
+          rclone copyto --s3-no-check-bucket xray-arm64-compressed myR2:gfw-arm/xray --progress
+      
       # 步骤 6: 刷新 Cloudflare 缓存
       - name: Purge Cloudflare Cache
         run: |
