@@ -1,6 +1,5 @@
 name: Deploy Cloudflared Binaries to R2
 
-# 允许手动从 GitHub Actions 页面触发
 on:
   workflow_dispatch:
 
@@ -8,28 +7,35 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      # 步骤 1: 检出你的仓库代码
+      # 步骤 1: 检出仓库代码
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 步骤 2: 安装依赖工具 (UPX 用于压缩)
+      # 步骤 2: 安装依赖工具
       - name: Install Tools (UPX)
         run: |
           sudo apt-get update
           sudo apt-get install -y upx-ucl
 
-      # 步骤 3: 设置 rclone (这是修正的关键部分)
-      # 使用官方的 rclone/setup-rclone action 来安装和配置 rclone
-      - name: Setup rclone
-        uses: rclone/setup-rclone@v1
-        with:
-          rclone_config: |
-            [myR2]
-            type = s3
-            provider = Cloudflare
-            access_key_id = ${{ secrets.R2_ACCESS_KEY_ID }}
-            secret_access_key = ${{ secrets.R2_SECRET_ACCESS_KEY }}
-            endpoint = https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+      # 步骤 3: 手动安装并配置 rclone (全新方法)
+      - name: Install and Configure rclone
+        run: |
+          # 从官方渠道下载并执行安装脚本
+          echo "Installing rclone..."
+          curl https://rclone.org/install.sh | sudo bash
+          
+          # 创建 rclone 的配置文件夹
+          echo "Creating rclone config directory..."
+          mkdir -p ~/.config/rclone
+          
+          # 将您的 R2 凭据写入 rclone 配置文件
+          echo "Writing rclone config file..."
+          echo "[myR2]
+          type = s3
+          provider = Cloudflare
+          access_key_id = ${{ secrets.R2_ACCESS_KEY_ID }}
+          secret_access_key = ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          endpoint = https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com" > ~/.config/rclone/rclone.conf
 
       # 步骤 4: 处理 AMD64 架构的 Cloudflared
       - name: Download, Compress, and Upload AMD64
