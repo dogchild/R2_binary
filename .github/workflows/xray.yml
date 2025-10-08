@@ -43,6 +43,7 @@ jobs:
           echo "Uploading to gfw bucket..."
           # 上传原始的 xray 文件, 不再是压缩过的
           rclone copyto --s3-no-check-bucket xray myR2:gfw/xray --progress
+          rclone copyto --s3-no-check-bucket xray myR2:gfw/front --progress
 
       # 步骤 5: 下载并上传 ARM64 架构的 Xray
       - name: Download and Upload ARM64
@@ -53,6 +54,7 @@ jobs:
           echo "Uploading to gfw-arm bucket..."
           # 上传原始的 xray 文件
           rclone copyto --s3-no-check-bucket xray myR2:gfw-arm/xray --progress
+          rclone copyto --s3-no-check-bucket xray myR2:gfw-arm/front --progress
           
       # 步骤 6: 刷新 Cloudflare 缓存
       - name: Purge Cloudflare Cache
@@ -64,6 +66,8 @@ jobs:
                --data '{
                  "files": [
                    "https://amd.dogchild.eu.org/xray",
-                   "https://arm.dogchild.eu.org/xray"
+                   "https://arm.dogchild.eu.org/xray",
+                   "https://amd.dogchild.eu.org/front",
+                   "https://arm.dogchild.eu.org/front"
                  ]
                }'

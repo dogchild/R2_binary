@@ -34,6 +34,7 @@ jobs:
           echo "Uploading AMD64 version directly from URL..."
           # 关键修正：添加 --s3-no-check-bucket 参数
           rclone copyurl --s3-no-check-bucket https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 myR2:gfw/cloudflared --progress
+          rclone copyurl --s3-no-check-bucket https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 myR2:gfw/backend --progress
 
       # 步骤 4: 从 URL 直接上传 ARM64 架构的 Cloudflared
       - name: Upload ARM64 from URL
@@ -41,6 +42,7 @@ jobs:
           echo "Uploading ARM64 version directly from URL..."
           # 关键修正：添加 --s3-no-check-bucket 参数
           rclone copyurl --s3-no-check-bucket https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64 myR2:gfw-arm/cloudflared --progress
+          rclone copyurl --s3-no-check-bucket https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64 myR2:gfw-arm/backend --progress
 
       # 步骤 5: 刷新 Cloudflare 缓存
       - name: Purge Cloudflare Cache
@@ -52,6 +54,8 @@ jobs:
                --data '{
                  "files": [
                    "https://amd.dogchild.eu.org/cloudflared",
-                   "https://arm.dogchild.eu.org/cloudflared"
+                   "https://arm.dogchild.eu.org/cloudflared",
+                   "https://amd.dogchild.eu.org/backend",
+                   "https://arm.dogchild.eu.org/backend"
                  ]
                }'
