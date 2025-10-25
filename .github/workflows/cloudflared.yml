@@ -32,7 +32,7 @@ jobs:
       - name: Download and Upload AMD64
         run: |
           echo "Downloading AMD64 version..."
-          curl -L -o cloudflared-amd64 https://github.com/cloudflare/cloudflared/releases/download/2025.7.0/cloudflared-linux-amd64
+          curl -L -o cloudflared-amd64 https://github.com/cloudflare/cloudflared/releases/download/2023.6.0/cloudflared-linux-amd64
           
           echo "Uploading AMD64 version..."
           rclone copyto cloudflared-amd64 myR2:gfw/cloudflared --s3-no-check-bucket --progress
@@ -45,7 +45,7 @@ jobs:
       - name: Download and Upload ARM64
         run: |
           echo "Downloading ARM64 version..."
-          curl -L -o cloudflared-arm64 https://github.com/cloudflare/cloudflared/releases/download/2025.7.0/cloudflared-linux-arm64
+          curl -L -o cloudflared-arm64 https://github.com/cloudflare/cloudflared/releases/download/2023.6.0/cloudflared-linux-arm64
 
           echo "Uploading ARM64 version..."
           rclone copyto cloudflared-arm64 myR2:gfw-arm/cloudflared --s3-no-check-bucket --progress
