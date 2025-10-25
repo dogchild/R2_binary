@@ -28,21 +28,31 @@ jobs:
           secret_access_key = ${{ secrets.R2_SECRET_ACCESS_KEY }}
           endpoint = https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com" > ~/.config/rclone/rclone.conf
 
-      # 步骤 3: 从 URL 直接上传 AMD64 架构的 Cloudflared
-      - name: Upload AMD64 from URL
+      # 步骤 3: 下载并上传 AMD64 架构的 Cloudflared
+      - name: Download and Upload AMD64
         run: |
-          echo "Uploading AMD64 version directly from URL..."
-          # 关键修正：添加 --s3-no-check-bucket 参数
-          rclone copyurl --s3-no-check-bucket https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 myR2:gfw/cloudflared --progress
-          rclone copyurl --s3-no-check-bucket https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 myR2:gfw/backend --progress
+          echo "Downloading AMD64 version..."
+          curl -L -o cloudflared-amd64 https://github.com/cloudflare/cloudflared/releases/download/2025.7.0/cloudflared-linux-amd64
+          
+          echo "Uploading AMD64 version..."
+          rclone copyto cloudflared-amd64 myR2:gfw/cloudflared --s3-no-check-bucket --progress
+          rclone copyto cloudflared-amd64 myR2:gfw/backend --s3-no-check-bucket --progress
+          
+          echo "Cleaning up..."
+          rm cloudflared-amd64
 
-      # 步骤 4: 从 URL 直接上传 ARM64 架构的 Cloudflared
-      - name: Upload ARM64 from URL
+      # 步骤 4: 下载并上传 ARM64 架构的 Cloudflared
+      - name: Download and Upload ARM64
         run: |
-          echo "Uploading ARM64 version directly from URL..."
-          # 关键修正：添加 --s3-no-check-bucket 参数
-          rclone copyurl --s3-no-check-bucket https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64 myR2:gfw-arm/cloudflared --progress
-          rclone copyurl --s3-no-check-bucket https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64 myR2:gfw-arm/backend --progress
+          echo "Downloading ARM64 version..."
+          curl -L -o cloudflared-arm64 https://github.com/cloudflare/cloudflared/releases/download/2025.7.0/cloudflared-linux-arm64
+
+          echo "Uploading ARM64 version..."
+          rclone copyto cloudflared-arm64 myR2:gfw-arm/cloudflared --s3-no-check-bucket --progress
+          rclone copyto cloudflared-arm64 myR2:gfw-arm/backend --s3-no-check-bucket --progress
+          
+          echo "Cleaning up..."
+          rm cloudflared-arm64
 
       # 步骤 5: 刷新 Cloudflare 缓存
       - name: Purge Cloudflare Cache
@@ -51,7 +61,7 @@ jobs:
           curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
                -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
                -H "Content-Type: application/json" \
-               --data '{
+               --data '{ 
                  "files": [
                    "https://amd.dogchild.eu.org/cloudflared",
                    "https://arm.dogchild.eu.org/cloudflared",
