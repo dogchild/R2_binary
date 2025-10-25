@@ -33,16 +33,16 @@ jobs:
         run: |
           echo "Uploading AMD64 version directly from URL..."
           # 关键修正：添加 --s3-no-check-bucket 参数
-          rclone copyurl --s3-no-check-bucket https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 myR2:gfw/cloudflared --progress
-          rclone copyurl --s3-no-check-bucket https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 myR2:gfw/backend --progress
+          rclone copyurl --s3-no-check-bucket https://github.com/cloudflare/cloudflared/releases/download/2025.7.0/cloudflared-linux-amd64 myR2:gfw/cloudflared --progress
+          rclone copyurl --s3-no-check-bucket https://github.com/cloudflare/cloudflared/releases/download/2025.7.0/cloudflared-linux-amd64 myR2:gfw/backend --progress
 
       # 步骤 4: 从 URL 直接上传 ARM64 架构的 Cloudflared
       - name: Upload ARM64 from URL
         run: |
           echo "Uploading ARM64 version directly from URL..."
           # 关键修正：添加 --s3-no-check-bucket 参数
-          rclone copyurl --s3-no-check-bucket https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64 myR2:gfw-arm/cloudflared --progress
-          rclone copyurl --s3-no-check-bucket https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64 myR2:gfw-arm/backend --progress
+          rclone copyurl --s3-no-check-bucket https://github.com/cloudflare/cloudflared/releases/download/2025.7.0/cloudflared-linux-arm64 myR2:gfw-arm/cloudflared --progress
+          rclone copyurl --s3-no-check-bucket https://github.com/cloudflare/cloudflared/releases/download/2025.7.0/cloudflared-linux-arm64 myR2:gfw-arm/backend --progress
 
       # 步骤 5: 刷新 Cloudflare 缓存
       - name: Purge Cloudflare Cache
@@ -51,7 +51,7 @@ jobs:
           curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
                -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
                -H "Content-Type: application/json" \
-               --data '{
+               --data '{ 
                  "files": [
                    "https://amd.dogchild.eu.org/cloudflared",
                    "https://arm.dogchild.eu.org/cloudflared",
