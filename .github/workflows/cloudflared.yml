@@ -62,7 +62,6 @@ jobs:
                -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
                -H "Content-Type: application/json" \
                --data '{ 
-               --data '{ 
                  "files": [
                    "https://amd.dogchild.eu.org/cloudflared",
                    "https://arm.dogchild.eu.org/cloudflared",
