@@ -42,6 +42,7 @@ jobs:
           rm cloudflared-amd64
 
       # 步骤 4: 下载并上传 ARM64 架构的 Cloudflared
+      - name: Download and Upload ARM64
         run: |
           echo "Downloading ARM64 version..."
           curl -L -o cloudflared-arm64 https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64
