@@ -1,0 +1,84 @@
+name: Deploy sing-box Binaries to R2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl tar gzip
+
+      - name: Install and Configure rclone
+        run: |
+          echo "Installing rclone..."
+          curl https://rclone.org/install.sh | sudo bash
+          
+          echo "Creating rclone config directory..."
+          mkdir -p ~/.config/rclone
+          
+          echo "Writing rclone config file..."
+          echo "[myR2]
+type = s3
+provider = Cloudflare
+access_key_id = ${{ secrets.R2_ACCESS_KEY_ID }}
+secret_access_key = ${{ secrets.R2_SECRET_ACCESS_KEY }}
+endpoint = https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com" > ~/.config/rclone/rclone.conf
+
+      - name: Get Latest Sing-Box Version
+        id: get_version
+        run: |
+          echo "Fetching latest sing-box version..."
+          LATEST_TAG=$(curl -sL -o /dev/null -w %{url_effective} https://github.com/SagerNet/sing-box/releases/latest | awk -F'/' '{print $NF}')
+          echo "Latest tag is $LATEST_TAG"
+          # Sometimes the tag starts with 'v', sometimes not. Remove it if present.
+          VERSION=$(echo $LATEST_TAG | sed 's/^v//')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Download and Upload AMD64
+        run: |
+          VERSION=${{ steps.get_version.outputs.version }}
+          FILENAME="sing-box-${VERSION}-linux-amd64.tar.gz"
+          DOWNLOAD_URL="https://github.com/SagerNet/sing-box/releases/download/v${VERSION}/${FILENAME}"
+          
+          echo "Processing AMD64 version..."
+          curl -L -o ${FILENAME} ${DOWNLOAD_URL}
+          tar -xzf ${FILENAME}
+          
+          # The extracted folder is sing-box-VERSION-linux-amd64
+          cd sing-box-${VERSION}-linux-amd64
+          
+          echo "Uploading to gfw bucket..."
+          rclone copyto --s3-no-check-bucket sing-box myR2:gfw/sing-box --progress
+          rclone copyto --s3-no-check-bucket sing-box myR2:gfw/fronts --progress
+
+      - name: Download and Upload ARM64
+        run: |
+          VERSION=${{ steps.get_version.outputs.version }}
+          FILENAME="sing-box-${VERSION}-linux-arm64.tar.gz"
+          DOWNLOAD_URL="https://github.com/SagerNet/sing-box/releases/download/v${VERSION}/${FILENAME}"
+
+          echo "Processing ARM64 version..."
+          curl -L -o ${FILENAME} ${DOWNLOAD_URL}
+          tar -xzf ${FILENAME}
+          
+          # The extracted folder is sing-box-VERSION-linux-arm64
+          cd sing-box-${VERSION}-linux-arm64
+
+          echo "Uploading to gfw-arm bucket..."
+          rclone copyto --s3-no-check-bucket sing-box myR2:gfw-arm/sing-box --progress
+          rclone copyto --s3-no-check-bucket sing-box myR2:gfw-arm/fronts --progress
+          
+      - name: Purge Cloudflare Cache
+        run: |
+          echo "Purging Cloudflare cache..."
+          curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
+               -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+               -H "Content-Type: application/json" \
+               --data '{ "files": [ "https://amd.dogchild.eu.org/sing-box", "https://arm.dogchild.eu.org/sing-box", "https://amd.dogchild.eu.org/fronts", "https://arm.dogchild.eu.org/fronts" ] }'
