@@ -1,0 +1,15 @@
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE configuration
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local secrets (if any)
+.env
+
+# Gemini context file
+GEMINI.md
